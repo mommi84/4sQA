@@ -34,26 +34,39 @@ include "config.php";
 //
 // )
 
+// print_r($entities);
+
+function append_from($from) {
+	$epoch = to_epoch($from);
+	return "&afterTimestamp=$epoch";
+}
+
+function append_to($to) {
+	$epoch = to_epoch($to);
+	return "&beforeTimestamp=$epoch";
+}
+
 $str = "https://api.foursquare.com/v2/users/self/venuehistory?oauth_token=$foursquare_token&v=20160228";
 
 foreach($entities as $ent => $val) {
 	if($ent == "datetime") {
-		if(isset($val["value"]["from"])) {
-			$from = $val["value"]["from"];
-			$epoch = to_epoch($from);
-			$str .= "&afterTimestamp=$epoch";
-		}
-		if(isset($val["value"]["to"])) {
-			$to = $val["value"]["to"];
-			$epoch = to_epoch($to);
-			$str .= "&beforeTimestamp=$epoch";
-		}
-		// echo $str;
+		if(isset($val["value"]["from"]))
+			$str .= append_from($val["value"]["from"]);
+		if(isset($val["value"]["to"]))
+			$str .= append_to($val["value"]["to"]);
+		
+		// workaround?
+		if(isset($val[0]["value"]["from"]))
+			$str .= append_from($val[0]["value"]["from"]);
+		if(isset($val[0]["value"]["to"]))
+			$str .= append_to($val[0]["value"]["to"]);
 		
 	} else if($ent == "search_query") {
 		// TODO
 	}
 }
+
+// echo "<br>$str<br>";
 
 $result = json_decode(file_get_contents($str), true);
 // $result = utf8_encode($result);

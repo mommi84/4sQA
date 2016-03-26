@@ -9,16 +9,61 @@ error_reporting(E_ALL);
 <html>
 <head>
 <link rel="stylesheet" href="microphone/microphone.min.css">
+<script src="https://code.jquery.com/jquery.js"></script>
+<script src="microphone/microphone.min.js"></script>
 </head>
 <body style="text-align: center;">
+<input id="query" type="text" size="100" name="query" value=""/>
+<input type="button" value="Ask" onclick="ask();"/>
 <center><div id="microphone"></div></center>
 <div id="result"></div>
 <div id="info"></div>
 <div id="error"></div>
-<script src="https://code.jquery.com/jquery.js"></script>
-<script src="microphone/microphone.min.js"></script>
 
 <script>
+
+function call(intent, entities) {
+	var jqxhr = $.ajax({
+		method: "GET",
+		url: "controller.php",
+		data: {
+			intent: intent,
+			entities: entities
+		}
+	})
+	  .done(function( msg ) {
+		  // alert( "Data Saved: " + msg );
+		  $("#result").html(msg);
+	  })
+	  .fail(function() {
+	    alert( "error" );
+	  })
+	  .always(function() {
+	    // alert( "complete" );
+	  });
+}
+
+function ask() {
+	$.ajax({
+	  url: 'https://api.wit.ai/message',
+	  data: {
+		  'v': "20140901",
+		  'q': $("#query").val(),
+		  'access_token' : 'QZ5ISMNKZDD5WP4RYP4JMVOQDGDTMXQ4'
+	  },
+	  dataType: 'jsonp',
+	  method: 'GET',
+	  success: function(response) {
+	      var resp = response["outcomes"][0];
+		  var intent = resp["intent"];
+		  var entities = resp["entities"];
+		  console.log(intent);
+		  console.log(entities["datetime"][0]);
+		  call(intent, entities);
+	  }
+	});
+}
+
   var mic = new Wit.Microphone(document.getElementById("microphone"));
   var info = function (msg) {
     document.getElementById("info").innerHTML = msg;
@@ -38,25 +83,7 @@ error_reporting(E_ALL);
   };
   mic.onresult = function (intent, entities) {
 	  
-	var jqxhr = $.ajax({
-		method: "GET",
-		url: "controller.php",
-		data: {
-			intent: intent,
-			entities: entities
-		}
-	})
-	  .done(function( msg ) {
-		  // alert( "Data Saved: " + msg );
-		  $("#result").html(msg);
-	  })
-	  .fail(function() {
-	    alert( "error" );
-	  })
-	  .always(function() {
-	    // alert( "complete" );
-	  });
-	  
+	  call(intent, entities);
     // var r = kv("intent", intent);
     //
     // for (var k in entities) {
